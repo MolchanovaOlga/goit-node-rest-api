@@ -1,6 +1,7 @@
 import {
   createContactSchema,
   updateContactSchema,
+  updateStatusSchema,
 } from "../schemas/contactsSchemas.js";
 import Contact from "../models/contacts.js";
 
@@ -103,6 +104,11 @@ export const updateStatusContact = async (req, res, next) => {
       return res
         .status(400)
         .json({ message: "Body must have at least one field" });
+    }
+
+    const { error } = updateStatusSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.message });
     }
 
     const { id } = req.params;
