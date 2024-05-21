@@ -4,6 +4,7 @@ import {
   updateStatusSchema,
 } from "../schemas/contactsSchemas.js";
 import Contact from "../models/contacts.js";
+import { isValidObjectId } from "mongoose";
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -17,12 +18,16 @@ export const getAllContacts = async (req, res, next) => {
 export const getOneContact = async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: `${id} is not valid id` });
+    }
+
     const contact = await Contact.findById(id);
 
     if (!contact) {
       return res.status(404).json({ message: "Not found" });
     }
-    console.log(contact);
+
     return res.status(200).json(contact);
   } catch (err) {
     next(err);
@@ -32,6 +37,10 @@ export const getOneContact = async (req, res, next) => {
 export const deleteContact = async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: `${id} is not valid id` });
+    }
+
     const removeContact = await Contact.findByIdAndDelete(id);
 
     if (!removeContact) {
@@ -84,6 +93,10 @@ export const updateContact = async (req, res, next) => {
     };
 
     const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: `${id} is not valid id` });
+    }
+
     const updatedContact = await Contact.findByIdAndUpdate(id, contact, {
       new: true,
     });
@@ -112,6 +125,10 @@ export const updateStatusContact = async (req, res, next) => {
     }
 
     const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: `${id} is not valid id` });
+    }
+
     const updateStatusContact = await Contact.findByIdAndUpdate(
       id,
       { favorite: req.body.favorite },
