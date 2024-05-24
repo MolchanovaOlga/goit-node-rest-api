@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
 
 import User from "../models/user.js";
-import { registerSchema } from "../schemas/authSchemas.js";
+import { registerLoginSchema } from "../schemas/authSchemas.js";
 
 async function register(req, res, next) {
   try {
-    const { error } = registerSchema.validate(req.body);
+    const { error } = registerLoginSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.message });
     }
@@ -14,7 +14,7 @@ async function register(req, res, next) {
 
     const user = await User.findOne({ email });
 
-    if (user !== null) {
+    if (user) {
       return res.status(409).json({ message: "Email in use" });
     }
 
@@ -27,4 +27,33 @@ async function register(req, res, next) {
   }
 }
 
-export default { register };
+async function login(req, res, next) {
+  try {
+    const { error } = registerLoginSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      console.log("wrong email");
+      return res.status(401).json({ message: "Email or password is wrong" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      console.log("wrong password");
+      return res.status(401).json({ message: "Email or password is wrong" });
+    }
+
+    res.status(200).json({ token: "TOKEN" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export default { register, login };
