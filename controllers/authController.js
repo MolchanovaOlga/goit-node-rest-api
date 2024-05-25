@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 import User from "../models/user.js";
 import { registerLoginSchema } from "../schemas/authSchemas.js";
@@ -21,7 +22,9 @@ async function register(req, res, next) {
     const passwordHash = await bcrypt.hash(password, 10);
     const result = await User.create({ email, password: passwordHash });
 
-    res.status(201).json(result);
+    res.status(201).json({
+      user: { email: result.email, subscription: result.subscription },
+    });
   } catch (err) {
     next(err);
   }
@@ -39,18 +42,23 @@ async function login(req, res, next) {
     const user = await User.findOne({ email });
 
     if (!user) {
-      console.log("wrong email");
       return res.status(401).json({ message: "Email or password is wrong" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      console.log("wrong password");
       return res.status(401).json({ message: "Email or password is wrong" });
     }
 
-    res.status(200).json({ token: "TOKEN" });
+    const token = jwt.sign({ id: user._id, email }, process.env.JWT_SECREET, {
+      expiresIn: "24h",
+    });
+
+    res.status(200).json({
+      token,
+      user: { email: user.email, subscription: user.subscription },
+    });
   } catch (err) {
     next(err);
   }

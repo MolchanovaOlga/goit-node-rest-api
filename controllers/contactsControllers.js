@@ -8,7 +8,7 @@ import { isValidObjectId } from "mongoose";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const contacts = await Contact.find();
+    const contacts = await Contact.find({ owner: req.user.id });
     return res.status(200).json(contacts);
   } catch (err) {
     next(err);
@@ -22,7 +22,7 @@ export const getOneContact = async (req, res, next) => {
       return res.status(400).json({ message: `${id} is not valid id` });
     }
 
-    const contact = await Contact.findById(id);
+    const contact = await Contact.findOne({ _id: id, owner: req.user.id });
 
     if (!contact) {
       return res.status(404).json({ message: "Not found" });
@@ -41,7 +41,10 @@ export const deleteContact = async (req, res, next) => {
       return res.status(400).json({ message: `${id} is not valid id` });
     }
 
-    const removeContact = await Contact.findByIdAndDelete(id);
+    const removeContact = await Contact.findOneAndDelete({
+      _id: id,
+      owner: req.user.id,
+    });
 
     if (!removeContact) {
       return res.status(404).json({ message: "Not found" });
@@ -64,6 +67,7 @@ export const createContact = async (req, res, next) => {
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
+      owner: req.user.id,
     };
 
     const newContact = await Contact.create(contact);
@@ -97,9 +101,16 @@ export const updateContact = async (req, res, next) => {
       return res.status(400).json({ message: `${id} is not valid id` });
     }
 
-    const updatedContact = await Contact.findByIdAndUpdate(id, contact, {
-      new: true,
-    });
+    const updatedContact = await Contact.findOneAndUpdate(
+      {
+        _id: id,
+        owner: req.user.id,
+      },
+      contact,
+      {
+        new: true,
+      }
+    );
 
     if (!updatedContact) {
       return res.status(404).json({ message: "Not found" });
@@ -129,8 +140,11 @@ export const updateStatusContact = async (req, res, next) => {
       return res.status(400).json({ message: `${id} is not valid id` });
     }
 
-    const updateStatusContact = await Contact.findByIdAndUpdate(
-      id,
+    const updateStatusContact = await Contact.findOneAndUpdate(
+      {
+        _id: id,
+        owner: req.user.id,
+      },
       { favorite: req.body.favorite },
       {
         new: true,
