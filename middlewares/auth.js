@@ -21,9 +21,23 @@ function auth(req, res, next) {
         return res.status(401).json({ message: "Not authorized" });
       }
 
-      req.user = { id: decoded.id, email: decoded.email };
+      try {
+        const user = await User.findById(decoded.id);
 
-      next();
+        if (!user) {
+          return res.status(401).json({ message: "Not authorized" });
+        }
+
+        if (user.token !== token) {
+          return res.status(401).json({ message: "Not authorized" });
+        }
+
+        req.user = { id: decoded.id, email: decoded.email };
+
+        next();
+      } catch (err) {
+        next(err);
+      }
     });
   } catch (err) {
     next(err);

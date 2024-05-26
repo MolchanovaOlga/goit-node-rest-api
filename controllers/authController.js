@@ -55,6 +55,8 @@ async function login(req, res, next) {
       expiresIn: "24h",
     });
 
+    await User.findByIdAndUpdate(user._id, { token }, { new: true });
+
     res.status(200).json({
       token,
       user: { email: user.email, subscription: user.subscription },
@@ -64,4 +66,32 @@ async function login(req, res, next) {
   }
 }
 
-export default { register, login };
+async function logout(req, res, next) {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { token: null }, { new: true });
+
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function currentUser(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    res
+      .status(200)
+      .json({ email: user.email, subscription: user.subscription });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export default { register, login, logout, currentUser };
