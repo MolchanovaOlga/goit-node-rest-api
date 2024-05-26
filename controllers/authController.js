@@ -78,9 +78,7 @@ async function logout(req, res, next) {
 
 async function currentUser(req, res, next) {
   try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(401).json({ message: "Not authorized" });
