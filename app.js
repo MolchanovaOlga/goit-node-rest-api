@@ -4,7 +4,8 @@ import morgan from "morgan";
 import cors from "cors";
 
 import contactsRouter from "./routes/contactsRouter.js";
-import usersRouter from "./routes/authRouter.js";
+import authRouter from "./routes/authRouter.js";
+import usersRouter from "./routes/usersRouter.js";
 import "./db.js";
 import authMiddleware from "./middlewares/auth.js";
 
@@ -14,7 +15,8 @@ app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/users", usersRouter);
+app.use("/api/users", authRouter);
+app.use("/api/users/avatars", authMiddleware, usersRouter);
 app.use("/api/contacts", authMiddleware, contactsRouter);
 
 app.use((_, res) => {
