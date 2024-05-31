@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import path from "node:path";
 
 import contactsRouter from "./routes/contactsRouter.js";
 import authRouter from "./routes/authRouter.js";
@@ -14,6 +15,8 @@ const app = express();
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
+
+app.use("/avatars", express.static(path.resolve("public/avatars")));
 
 app.use("/api/users", authRouter);
 app.use("/api/users/avatars", authMiddleware, usersRouter);
