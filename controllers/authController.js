@@ -53,6 +53,29 @@ async function register(req, res, next) {
   }
 }
 
+async function verifyEmail(req, res, next) {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      verify: true,
+      verificationToken: null,
+    });
+
+    console.log(user._id);
+
+    res.status(200).json({ message: "Verification successful" });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function login(req, res, next) {
   try {
     const { error } = registerLoginSchema.validate(req.body);
@@ -119,4 +142,4 @@ async function currentUser(req, res, next) {
   }
 }
 
-export default { register, login, logout, currentUser };
+export default { register, login, logout, currentUser, verifyEmail };
