@@ -4,7 +4,7 @@ import gravatar from "gravatar";
 import crypto from "node:crypto";
 
 import User from "../models/user.js";
-import { registerLoginSchema } from "../schemas/authSchemas.js";
+import { registerLoginSchema, emailSchema } from "../schemas/authSchemas.js";
 import mail from "../services/nodemailer.js";
 
 async function register(req, res, next) {
@@ -29,7 +29,7 @@ async function register(req, res, next) {
 
     mail.sendMail({
       to: email,
-      from: "designer.molchanova@gmail.com",
+      from: "develop@ukr.net",
       subject: "Welcome to Phonebook!",
       html: `To confirm your email please click on <a href="http://localhost:3000/api/users/verify/${verificationToken}">Link</a>`,
       text: `To confirm your email please open the link http://localhost:3000/api/users/verify/${verificationToken}`,
@@ -68,11 +68,45 @@ async function verifyEmail(req, res, next) {
       verificationToken: null,
     });
 
-    console.log(user._id);
-
     res.status(200).json({ message: "Verification successful" });
   } catch (err) {
     next(err);
+  }
+}
+
+async function resendVerifyEmail(req, res, next) {
+  try {
+    const { error } = emailSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: "Email not found" });
+    }
+    console.log(user.verificationToken);
+    if (user.verify) {
+      return res
+        .status(400)
+        .json({ message: "Verification has already been passed" });
+    }
+
+    mail.sendMail({
+      to: email,
+      from: "develop@ukr.net",
+      subject: "Welcome to Phonebook!",
+      html: `To confirm your email please click on <a href="http://localhost:3000/api/users/verify/${user.verificationToken}">Link</a>`,
+      text: `To confirm your email please open the link http://localhost:3000/api/users/verify/${user.verificationToken}`,
+    });
+
+    return res.status(200).json({
+      message: "Verification email sent",
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
@@ -142,4 +176,11 @@ async function currentUser(req, res, next) {
   }
 }
 
-export default { register, login, logout, currentUser, verifyEmail };
+export default {
+  register,
+  login,
+  logout,
+  currentUser,
+  verifyEmail,
+  resendVerifyEmail,
+};

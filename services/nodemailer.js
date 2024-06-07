@@ -1,13 +1,12 @@
+import nodemailer from "nodemailer";
 import "dotenv/config";
 
-import nodemailer from "nodemailer";
-
-export const transport = nodemailer.createTransport({
+const transport = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",
   port: 2525,
   auth: {
-    user: "d6ad908720302c",
-    pass: "89c716fd3a0782",
+    user: process.env.MAILTRAP_USERNAME,
+    pass: process.env.MAILTRAP_PASSWORD,
   },
 });
 
@@ -16,10 +15,12 @@ export const transport = nodemailer.createTransport({
 //   pass: process.env.MAILTRAP_PASSWORD,
 // },
 
+// user: "d6ad908720302c",
+//     pass: "89c716fd3a0782",
+
 function sendMail(message) {
+  console.log(process.env.MAILTRAP_USERNAME);
   return transport.sendMail(message);
 }
 
 export default { sendMail };
-
-// transport.sendMail(message).then(console.log).catch(console.error);
